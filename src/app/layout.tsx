@@ -1,5 +1,8 @@
 import type { Metadata } from "next";
+import Script from "next/script";
 import "./globals.css";
+
+const GA_ID = "G-35HJ7KPD22";
 
 export const metadata: Metadata = {
   title: "Khagna — Best price & best card",
@@ -63,6 +66,16 @@ function Nav() {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" className="h-full">
+      <head>
+        {/* Google tag (gtag.js) */}
+        <Script async src={`https://www.googletagmanager.com/gtag/js?id=${GA_ID}`} strategy="afterInteractive" />
+        <Script id="gtag-init" strategy="afterInteractive">
+          {`window.dataLayer = window.dataLayer || [];
+function gtag(){dataLayer.push(arguments);}
+gtag('js', new Date());
+gtag('config', '${GA_ID}');`}
+        </Script>
+      </head>
       <body className="min-h-full flex flex-col pb-16 md:pb-0">
         <Nav />
         <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-6">{children}</main>
