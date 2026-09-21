@@ -17,6 +17,23 @@ one best-offer row per item into Turso. Code lives in `src/lib/crawl/`, runnable
 Blocked/empty outcomes are **logged, never faked**: every attempt lands in `crawl_runs`
 with `status` + reason. The pipeline writes zero simulated prices.
 
+## More sites evaluated (Sep 2026)
+
+| Retailer | Verdict |
+|---|---|
+| Target (`target.com/s`) | 🛑 Captcha wall on search |
+| Sprouts (`shop.sprouts.com`, Instacart platform) | 🛑 Captcha wall |
+| Safeway (`safeway.com`, Albertsons) | ⚠️ 200 + 385KB but zero prices in SSR markup (JS shell) |
+| ALDI (`aldi.us`) | ⚠️ Search redirects to a 404 JS shell — no SSR data |
+| Bashas' / Food City (`bashas.com`, `foodcity.com`) | No product search on own domain (Instacart/Shipt storefronts, captcha); foodcity search serves captcha |
+
+Because these can't be crawled, their **physical Tempe stores are seeded** (`retailer: "other"`
+in `stores-tempe.ts`) so shoppers can compare them through manual/dashboard prices:
+Sprouts Farmers Market – Elliot Rd (931 E Elliot Rd), ALDI – Southern Ave
+(1715 E Southern Ave), Bashas' – Warner & McClintock (1761 E Warner Rd) — all with
+verified coordinates. The pipeline always seeds `"other"` stores regardless of the
+`--retailers` filter.
+
 ## How extraction works (per retailer × query)
 
 1. **Fetch** (`http.ts`): rotating desktop user agents, 25s timeout (tunable),

@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import Script from "next/script";
 import "./globals.css";
 
@@ -21,7 +22,7 @@ function Nav() {
     <header className="sticky top-0 z-40">
       <div className="glass border-b border-emerald-100/60">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3">
-          <a href="/" className="flex items-center gap-2">
+          <Link href="/" className="flex items-center gap-2">
             <span className="grid h-9 w-9 place-items-center rounded-xl bg-gradient-to-br from-emerald-500 to-cyan-500 text-lg font-black text-white shadow-lg shadow-emerald-500/30">
               খ
             </span>
@@ -31,7 +32,7 @@ function Nav() {
                 beta
               </span>
             </span>
-          </a>
+          </Link>
           <nav className="hidden gap-1 text-sm font-medium md:flex">
             {links.map((l) => (
               <a

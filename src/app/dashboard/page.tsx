@@ -14,7 +14,18 @@ export default function DashboardPage() {
     if (j.ok) setData(j);
     await fetch("/api/init", { method: "POST" }).catch(() => {});
   }
-  useEffect(() => { load(); }, []);
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const r = await fetch("/api/comments");
+      const j = await r.json();
+      if (!cancelled && j.ok) setData(j);
+      await fetch("/api/init", { method: "POST" }).catch(() => {});
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   async function postComment() {
     if (!comment.text.trim()) return alert("Write a comment first");

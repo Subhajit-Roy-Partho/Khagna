@@ -8,7 +8,6 @@ import { fetchHtml, proxyMode } from "./http";
 import { llmEnabled, normalizeTitle } from "./llm";
 import type {
   CatalogEntry,
-  CrawledOffer,
   CrawlAttempt,
   PipelineSummary,
   RetailerId,
@@ -118,10 +117,11 @@ export async function runPipeline(opts: PipelineOptions = {}): Promise<PipelineS
   );
 
   // 1. Seed Tempe stores (real locations) — always, even for dry runs.
+  // "other" stores (no crawlable storefront) seed regardless of retailer filter.
   const storeIds: Record<string, number> = {};
   let storesUpserted = 0;
   for (const s of TEMPE_STORES) {
-    if (!retailers.includes(s.retailer as RetailerId)) continue;
+    if (s.retailer !== "other" && !retailers.includes(s.retailer as RetailerId)) continue;
     const before = await getDb().execute({
       sql: "SELECT id FROM stores WHERE address=? LIMIT 1",
       args: [s.address],

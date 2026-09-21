@@ -83,4 +83,36 @@ export const TEMPE_STORES: TempeStoreSeed[] = [
     lng: -111.9108674,
     phone: "(480) 752-9700",
   },
+  // Local favorites without crawlable storefronts (Instacart/captcha walls or
+  // JS-only SPAs) — seeded so shoppers can compare them via manual prices.
+  {
+    key: "sprouts-elliot",
+    retailer: "other",
+    name: "Sprouts Farmers Market – Elliot Rd",
+    city: "Tempe",
+    address: "931 E Elliot Rd, Tempe, AZ 85284",
+    lat: 33.3478873,
+    lng: -111.927333,
+    phone: "(480) 567-7040",
+  },
+  {
+    key: "aldi-southern",
+    retailer: "other",
+    name: "ALDI – Southern Ave",
+    city: "Tempe",
+    address: "1715 E Southern Ave, Tempe, AZ 85282",
+    lat: 33.3930736,
+    lng: -111.9110093,
+    phone: "(855) 955-2534",
+  },
+  {
+    key: "bashas-warner",
+    retailer: "other",
+    name: "Bashas' – Warner & McClintock",
+    city: "Tempe",
+    address: "1761 E Warner Rd, Tempe, AZ 85284",
+    lat: 33.3347854,
+    lng: -111.9202338,
+    phone: "(480) 839-9778",
+  },
 ];

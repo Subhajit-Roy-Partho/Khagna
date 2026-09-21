@@ -18,16 +18,22 @@ export default function StoresPage() {
   const [radiusKm, setRadiusKm] = useState(25);
   const [unit, setUnit] = useState("kg");
   const [online, setOnline] = useState("include");
-  const [lat, setLat] = useState(NaN);
-  const [lng, setLng] = useState(NaN);
+  const [lat, setLat] = useState(CITY_COORDS["Chicago"].lat);
+  const [lng, setLng] = useState(CITY_COORDS["Chicago"].lng);
   const [data, setData] = useState<ItemRow[]>([]);
   const [loading, setLoading] = useState(false);
   const [correcting, setCorrecting] = useState<Record<string, string>>({});
 
   useEffect(() => {
-    fetch("/api/init", { method: "POST" }).catch(() => {});
-    const c = CITY_COORDS["Chicago"];
-    setLat(c.lat); setLng(c.lng);
+    let cancelled = false;
+    (async () => {
+      await fetch("/api/init", { method: "POST" }).catch(() => {});
+      if (!cancelled) await search();
+    })();
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   async function search() {
@@ -46,8 +52,7 @@ export default function StoresPage() {
     }
   }
 
-  useEffect(() => { search(); // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  // (initial search runs inside the mount effect above)
 
   function useMyLocation() {
     if (!navigator.geolocation) return alert("Geolocation not supported");
@@ -139,14 +144,14 @@ export default function StoresPage() {
                   {(options as Record<string, unknown>[]).map((o) => {
                     const quoted = Number(o.price);
                     const conv = o.unit === unit ? quoted : convertPrice(quoted, String(o.unit), unit);
-                    const ppk = pricePerKg(quoted, String(o.unit));
                     const dist = Number(o.distanceKm);
                     return (
                       <tr key={String(o.id)} className="border-t">
                         <td className="py-2 pr-2">
                           {String(o.image_url || "") ? (
-                            // plain <img> (not next/image): retailer CDNs aren't in remotePatterns,
-                            // and hotlinked product shots help identify the exact pack.
+                            // Intentional plain <img>: retailer CDN hotlinks aren't in
+                            // next/image remotePatterns (see docs/02-architecture.md).
+                            // eslint-disable-next-line @next/next/no-img-element
                             <img
                               src={String(o.image_url)}
                               alt={item.name_en}

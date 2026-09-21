@@ -7,7 +7,7 @@ export async function GET(req: NextRequest) {
     const db = getDb();
     const sp = req.nextUrl.searchParams;
     const city = sp.get("city") || "";
-    let sql = "SELECT * FROM stores ORDER BY name";
+    const sql = "SELECT * FROM stores ORDER BY name";
     let rows;
     if (city && city !== "All") {
       rows = await db.execute({ sql: "SELECT * FROM stores WHERE city=? ORDER BY name", args: [city] });

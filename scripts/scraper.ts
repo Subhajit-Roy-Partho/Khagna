@@ -77,7 +77,7 @@ async function main() {
     let price: number | null = null;
     try {
       price = await scrapePrice(t.url, t.cssSelector);
-    } catch (e) {
+    } catch {
       console.warn(`fetch failed for ${t.url}, using simulated price`);
     }
     if (price == null || !isFinite(price)) {

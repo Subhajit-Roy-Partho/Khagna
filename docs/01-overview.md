@@ -51,7 +51,9 @@ ranked by `best matching rate × 10 + rating − annual_fee/1000`.
 
 ## Current geographic focus: Tempe, AZ (+ Mesa, Chandler)
 
-8 real seeded stores with verified addresses and coordinates:
+11 real seeded stores with verified addresses and coordinates — 8 crawlable-retailer
+locations plus 3 local favorites (Sprouts, ALDI, Bashas') seeded for manual-price
+comparison since their sites can't be crawled (see crawler guide):
 
 | Store | Address |
 |---|---|
@@ -63,6 +65,9 @@ ranked by `best matching rate × 10 + rating − annual_fee/1000`.
 | Sam's Club – Tempe (#4956) | 2080 E Rio Salado Pkwy, Tempe, AZ 85288 |
 | Sam's Club – Chandler (#6213) | 700 N 54th St, Chandler, AZ 85226 |
 | Fry's Marketplace – Baseline & McClintock | 5100 S McClintock Dr, Tempe, AZ 85282 |
+| Sprouts Farmers Market – Elliot Rd *(manual prices)* | 931 E Elliot Rd, Tempe, AZ 85284 |
+| ALDI – Southern Ave *(manual prices)* | 1715 E Southern Ave, Tempe, AZ 85282 |
+| Bashas' – Warner & McClintock *(manual prices)* | 1761 E Warner Rd, Tempe, AZ 85284 |
 
 24-item grocery catalog (dairy, produce, meat, bakery, spices incl. Bengali names).
 Live scraped prices currently come from **Fry's** (see the crawler guide for why).

@@ -38,12 +38,6 @@ const UNIT_WORD: Record<string, ParsedPrice["unit"]> = {
 const PER_UNIT_RE =
   /\$?\s*[\d.]+\s*(?:\/|per)\s*(fl\s*oz|kg|kilograms?|grams?|lbs?|pounds?|ounces?|oz|ct|count|packs?|each|gall?ons?|dozen|\bg\b)/i;
 
-function unitFromText(t: string): ParsedPrice["unit"] | null {
-  const m = t.toLowerCase().match(/(kg|kilograms?|grams?|lbs?|pounds?|ounces?|oz|ct|count|packs?|each|\bea\b|gall?ons?|dozen)\b/);
-  if (!m) return null;
-  return UNIT_WORD[m[1]] ?? null;
-}
-
 export function parsePriceAndUnit(
   price: number,
   priceText: string,
