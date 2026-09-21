@@ -1,0 +1,97 @@
+@import "tailwindcss";
+
+:root {
+  --background: #f6f8f7;
+  --foreground: #0c1512;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+::selection {
+  background: #10b981;
+  color: white;
+}
+
+/* ---------- Khagna modern utilities ---------- */
+
+.gradient-text {
+  background: linear-gradient(92deg, #6ee7b7 0%, #34d399 35%, #22d3ee 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.glass {
+  background: rgba(255, 255, 255, 0.72);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+}
+
+.glass-dark {
+  background: rgba(6, 20, 15, 0.55);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+}
+
+.card-lift {
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+.card-lift:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 20px 40px -18px rgba(6, 78, 59, 0.35);
+}
+
+.hero-mesh {
+  background:
+    radial-gradient(600px 300px at 15% 20%, rgba(52, 211, 153, 0.25), transparent 60%),
+    radial-gradient(700px 350px at 85% 15%, rgba(34, 211, 238, 0.22), transparent 60%),
+    radial-gradient(500px 400px at 50% 100%, rgba(16, 185, 129, 0.18), transparent 60%),
+    linear-gradient(160deg, #04120d 0%, #06231a 55%, #083344 100%);
+}
+
+@keyframes blob-float {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  33% { transform: translate(30px, -25px) scale(1.08); }
+  66% { transform: translate(-25px, 20px) scale(0.95); }
+}
+.blob {
+  animation: blob-float 12s ease-in-out infinite;
+  filter: blur(70px);
+  opacity: 0.5;
+}
+
+@keyframes marquee-x {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+.marquee-track {
+  animation: marquee-x 28s linear infinite;
+}
+
+@keyframes pulse-ring {
+  0% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.5); }
+  70% { box-shadow: 0 0 0 12px rgba(16, 185, 129, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+}
+.pulse-dot {
+  animation: pulse-ring 2s infinite;
+}
+
+/* slim scrollbars for tables */
+.slim-scroll::-webkit-scrollbar {
+  height: 8px;
+  width: 8px;
+}
+.slim-scroll::-webkit-scrollbar-thumb {
+  background: #a7f3d0;
+  border-radius: 8px;
+}
