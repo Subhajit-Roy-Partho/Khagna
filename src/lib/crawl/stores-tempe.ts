@@ -83,6 +83,16 @@ export const TEMPE_STORES: TempeStoreSeed[] = [
     lng: -111.9108674,
     phone: "(480) 752-9700",
   },
+  {
+    key: "target-baseline",
+    retailer: "target",
+    name: "Target – Baseline & McClintock",
+    city: "Tempe",
+    address: "1818 E Baseline Rd, Tempe, AZ 85283",
+    lat: 33.3795288,
+    lng: -111.9078384,
+    phone: "(480) 831-9162",
+  },
   // Local favorites without crawlable storefronts (Instacart/captcha walls or
   // JS-only SPAs) — seeded so shoppers can compare them via manual prices.
   {

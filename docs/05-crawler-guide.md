@@ -10,9 +10,10 @@ one best-offer row per item into Turso. Code lives in `src/lib/crawl/`, runnable
 | Retailer | Search URL pattern | Result |
 |---|---|---|
 | Fry's (Kroger) | `frysfood.com/search?query=` | ✅ **Working from residential IPs** — SSR markup + embedded pricing JSON, 21/24 catalog items live. ❌ **Fails from Vercel/datacenters** (connection aborted, HTTP 0 — verified Sep 2026) |
-| Walmart | `walmart.com/search?q=` | 🛑 PerimeterX `/blocked` ("Robot or human?" captcha) |
-| Sam's Club | `samsclub.com/s/` | 🛑 PerimeterX `are-you-human` (`px-captcha`) |
-| Costco | `costco.com/s?keyword=` | ⚠️ Page loads (Kasada present) but prices render client-side only — nothing extractable server-side |
+| Walmart | `walmart.com/search?q=` | 🛑 PerimeterX `/blocked`. ✅ Reachable **via Google Shopping backfill** (needs `SERPAPI_KEY`) |
+| Target | `target.com/s?search_term=` (+ `redsky` JSON API) | 🛑 PerimeterX everywhere — the storefront serves 404+captcha to bots and the `redsky` product API answers HTTP 435 + `px-captcha`. ✅ Reachable **via Google Shopping backfill** (needs `SERPAPI_KEY`) |
+| Sam's Club | `samsclub.com/s/` | 🛑 PerimeterX `are-you-human` (`px-captcha`). ✅ Reachable **via Google Shopping backfill** |
+| Costco | `costco.com/s?keyword=` | ⚠️ Page loads (Kasada present) but prices render client-side only — nothing extractable server-side. ✅ Reachable **via Google Shopping backfill** |
 
 Blocked/empty outcomes are **logged, never faked**: every attempt lands in `crawl_runs`
 with `status` + reason. The pipeline writes zero simulated prices.
@@ -109,6 +110,26 @@ residential proxies are the realistic way past Walmart/Sam's walls from servers)
   datacenters fail — `npm run crawl:tempe` locally, on a cron/Task Scheduler, is
   currently the reliable way to refresh Fry's prices. Verified: sandbox run wrote
   21 live prices; the identical run from Vercel aborts at the network level.
+
+## Google Shopping backfill — the better way for walled retailers (implemented)
+
+Direct scraping loses to PerimeterX/Kasada, so the pipeline has a second source:
+**Google Shopping results via SerpApi** (`src/lib/crawl/serpapi.ts`). Google already
+did the hard work of rendering those merchant pages; one query returns offers from
+*all* merchants, so a single call per catalog query covers Walmart + Target + Costco
++ Sam's at once. Results are location-scoped (`location=Tempe,Arizona`), carry
+`extracted_price` numbers + `thumbnail` photos, and map to our store anchors by
+merchant name (unmatched merchants like Amazon/eBay are ignored, 2 offers kept per
+merchant, cheapest upserted with a "via Google Shopping" note).
+
+- **Fills gaps only**: merchants whose direct crawl already found offers are skipped.
+- **Without `SERPAPI_KEY` the whole phase is a silent no-op** (verified) — never throws.
+- **Cost**: free tier = 100 searches/month; identical repeat queries hit SerpApi's
+  cache and are free. A full 24-query run = 24 searches (~4 runs/month free);
+  the 8-staple cron subset = 8 searches.
+- **Setup**: sign up at serpapi.com → copy API key → `SERPAPI_KEY=…` in `.env`
+  (+ Vercel env vars). Then `npm run crawl:tempe -- --retailers=target,walmart --limit=3`
+  (drop `--no-serp`). Mapping logic is fixture-tested (12 assertions, no key needed).
 
 ## Getting the blocked retailers for real (honest options)
 

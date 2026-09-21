@@ -24,6 +24,7 @@ Environment Variables** (exact lowercase names; the code reads these first):
 | `ModelsAllowed` | Comma-separated models, first = default (e.g. `qwen/qwen3.8-flash,…`) |
 | `LLM_MODEL` *(optional)* | Override the default model |
 | `CRAWL_PROXY` *(optional)* | Residential proxy for server-side crawls |
+| `SERPAPI_KEY` *(optional)* | Google Shopping backfill for Walmart/Target/Costco/Sam's (free 100/mo) |
 
 `NEXT_PUBLIC_GA_ID` is not needed — the GA tag ID is constants in `layout.tsx`.
 

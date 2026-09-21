@@ -1,6 +1,6 @@
 // Shared types for the Khagna grocery crawler (Tempe AZ focus).
 
-export type RetailerId = "walmart" | "samsclub" | "costco" | "frys";
+export type RetailerId = "walmart" | "samsclub" | "costco" | "frys" | "target";
 
 export type CrawledOffer = {
   retailer: RetailerId;

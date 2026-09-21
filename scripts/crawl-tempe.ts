@@ -11,6 +11,7 @@
  *   npm run crawl:tempe -- --seed-only          # only seed stores, no crawling
  *   npm run crawl:tempe -- --dry-run            # fetch + parse, write nothing
  *   npm run crawl:tempe -- --no-llm             # skip LLM title normalization
+ *   npm run crawl:tempe -- --no-serp            # skip Google Shopping backfill
  */
 import "dotenv/config";
 import { runPipeline, ALL_RETAILERS } from "../src/lib/crawl/pipeline";
@@ -38,6 +39,7 @@ async function main() {
     timeoutMs,
     dryRun: flag("dry-run"),
     useLlm: !flag("no-llm"),
+    useSerp: !flag("no-serp"),
     seedOnly: flag("seed-only"),
   });
 

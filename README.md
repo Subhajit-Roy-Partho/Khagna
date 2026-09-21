@@ -63,7 +63,8 @@ npm run crawl:tempe -- --seed-only                       # just seed the 8 real 
 npm run crawl:tempe -- --dry-run                         # fetch + parse, write nothing
 ```
 
-Status (measured): Fry's ✅ live · Walmart/Sam's 🛑 bot-walled · Costco ⚠️ client-rendered.
+Status (measured): Fry's ✅ live from residential IPs · Walmart/Target/Sam's/Costco 🛑 bot-walled
+directly, ✅ reachable via Google Shopping backfill (add `SERPAPI_KEY`, free 100/mo).
 Full story + how to unblock the rest: [`docs/05-crawler-guide.md`](docs/05-crawler-guide.md).
 
 ## Scraper cron (legacy generic endpoint)

@@ -6,6 +6,7 @@ import { RETAILERS } from "./retailers";
 import { extractOffers } from "./retailers";
 import { fetchHtml, proxyMode } from "./http";
 import { llmEnabled, normalizeTitle } from "./llm";
+import { serpEnabled, fetchShoppingOffers, type MerchantOffer } from "./serpapi";
 import type {
   CatalogEntry,
   CrawlAttempt,
@@ -13,7 +14,7 @@ import type {
   RetailerId,
 } from "./types";
 
-export const ALL_RETAILERS: RetailerId[] = ["walmart", "samsclub", "costco", "frys"];
+export const ALL_RETAILERS: RetailerId[] = ["walmart", "samsclub", "costco", "frys", "target"];
 
 export type PipelineOptions = {
   retailers?: RetailerId[];
@@ -22,6 +23,7 @@ export type PipelineOptions = {
   timeoutMs?: number; // per-request timeout (default 25000)
   dryRun?: boolean;
   useLlm?: boolean;
+  useSerp?: boolean; // Google Shopping backfill for blocked retailers (needs SERPAPI_KEY)
   seedOnly?: boolean;
 };
 
@@ -88,8 +90,37 @@ async function ensureItem(entry: CatalogEntry, imageUrl: string): Promise<{ id: 
   return { id: Number(r.lastInsertRowid), created: true };
 }
 
-async function logRun(
-  retailer: string,
+async function upsertScraped(
+  itemId: number,
+  storeId: number,
+  price: number,
+  unit: string,
+  inStock: boolean,
+  note: string,
+  imageUrl: string
+): Promise<void> {
+  const db = getDb();
+  const existing = await db.execute({
+    sql: "SELECT id FROM prices WHERE item_id=? AND store_id=? AND is_online=1 LIMIT 1",
+    args: [itemId, storeId],
+  });
+  if (existing.rows[0]) {
+    await db.execute({
+      sql: "UPDATE prices SET price=?, unit=?, stock_level=?, updated_at=datetime('now'), source='scraped', note=?, image_url=? WHERE id=?",
+      args: [
+        price, unit, inStock ? "in_stock" : "out_of_stock", note, imageUrl,
+        Number((existing.rows[0] as unknown as { id: number }).id),
+      ],
+    });
+  } else {
+    await db.execute({
+      sql: "INSERT INTO prices (item_id, store_id, price, unit, quality, stock_level, is_online, source, note, image_url) VALUES (?,?,?,?,?,?,1,'scraped',?,?)",
+      args: [itemId, storeId, price, unit, 4, inStock ? "in_stock" : "out_of_stock", note, imageUrl],
+    });
+  }
+}
+
+async function logRun(  retailer: string,
   query: string,
   status: string,
   found: number,
@@ -111,9 +142,10 @@ export async function runPipeline(opts: PipelineOptions = {}): Promise<PipelineS
   const limit = opts.limit ?? 6;
   const dryRun = opts.dryRun ?? false;
   const useLlm = (opts.useLlm ?? true) && llmEnabled() && !dryRun;
+  const serpOn = (opts.useSerp ?? true) && serpEnabled() && !dryRun;
 
   console.log(
-    `Crawl plan: ${retailers.join(",")} × ${entries.length} queries (limit ${limit}, dryRun=${dryRun}, llm=${useLlm}, proxy=${proxyMode()})`
+    `Crawl plan: ${retailers.join(",")} × ${entries.length} queries (limit ${limit}, dryRun=${dryRun}, llm=${useLlm}, serp=${serpOn}, proxy=${proxyMode()})`
   );
 
   // 1. Seed Tempe stores (real locations) — always, even for dry runs.
@@ -195,24 +227,7 @@ export async function runPipeline(opts: PipelineOptions = {}): Promise<PipelineS
         const best = attempt.offers.reduce((a, b) => (normValue(a) <= normValue(b) ? a : b));
         const note =
           `${cfg.label} · best of ${attempt.offers.length} · ${best.title}${best.brand ? ` · ${best.brand}` : ""} · ${best.url}`.slice(0, 400);
-        const existing = await getDb().execute({
-          sql: "SELECT id FROM prices WHERE item_id=? AND store_id=? AND is_online=1 LIMIT 1",
-          args: [itemId, storeId],
-        });
-        if (existing.rows[0]) {
-          await getDb().execute({
-            sql: "UPDATE prices SET price=?, unit=?, stock_level=?, updated_at=datetime('now'), source='scraped', note=?, image_url=? WHERE id=?",
-            args: [
-              best.price, best.unit, best.inStock ? "in_stock" : "out_of_stock", note, best.imageUrl,
-              Number((existing.rows[0] as unknown as { id: number }).id),
-            ],
-          });
-        } else {
-          await getDb().execute({
-            sql: "INSERT INTO prices (item_id, store_id, price, unit, quality, stock_level, is_online, source, note, image_url) VALUES (?,?,?,?,?,?,1,'scraped',?,?)",
-            args: [itemId, storeId, best.price, best.unit, 4, best.inStock ? "in_stock" : "out_of_stock", note, best.imageUrl],
-          });
-        }
+        await upsertScraped(itemId, storeId, best.price, best.unit, best.inStock, note, best.imageUrl);
         upserted = 1;
         summary.pricesUpserted += upserted;
       }
@@ -225,6 +240,62 @@ export async function runPipeline(opts: PipelineOptions = {}): Promise<PipelineS
         `[${retailer}] "${entry.query}": ${attempt.status} (${attempt.offers.length} offers, ${upserted} upserted)${attempt.blockReason ? ` — ${attempt.blockReason}` : ""}${attempt.error && attempt.status !== "blocked" ? ` — ${attempt.error}` : ""}`
       );
       await sleep(1500); // politeness delay between requests
+    }
+  }
+
+  // 5. Google Shopping backfill (SerpApi): one call per query covers every
+  // blocked retailer at once. Only fills gaps — retailers whose direct attempt
+  // above found zero offers. Skipped entirely without SERPAPI_KEY.
+  if (serpOn) {
+    console.log(`SerpApi backfill: ${entries.length} queries`);
+    for (const entry of entries) {
+      const { offers, error } = await fetchShoppingOffers(entry.query, 2);
+      const byRetailer = new Map<RetailerId, MerchantOffer[]>();
+      for (const o of offers) {
+        if (!retailers.includes(o.retailer)) continue;
+        byRetailer.set(o.retailer, [...(byRetailer.get(o.retailer) ?? []), o]);
+      }
+      for (const retailer of retailers) {
+        const anchorKey = TEMPE_STORES.find((s) => s.retailer === retailer)?.key;
+        const storeId = anchorKey ? storeIds[anchorKey] : undefined;
+        if (!storeId) continue;
+        const direct = summary.attempts.find((a) => a.retailer === retailer && a.query === entry.query);
+        if (direct && direct.offers.length > 0) continue; // direct crawl already won
+        const mine = byRetailer.get(retailer) ?? [];
+        const attempt: CrawlAttempt = {
+          retailer,
+          query: entry.query,
+          status: mine.length ? "ok" : error ? "error" : "empty",
+          offers: mine.map((o) => ({
+            url: o.url,
+            title: o.title,
+            brand: o.merchant,
+            price: o.price,
+            unit: o.unit,
+            sizeText: o.sizeText,
+            imageUrl: o.imageUrl,
+            inStock: true,
+            via: "google-shopping",
+          })),
+          sampleUrl: `google-shopping:${entry.query}`,
+          error: mine.length ? undefined : error ?? "No matching merchant offers.",
+        };
+        let upserted = 0;
+        if (mine.length) {
+          const { id: itemId, created } = await ensureItem(entry, mine[0].imageUrl);
+          if (created) summary.itemsUpserted++;
+          const best = mine.reduce((a, b) => (normValue(a) <= normValue(b) ? a : b));
+          const note =
+            `${RETAILERS[retailer].label} · via Google Shopping · ${best.title} · ${best.url}`.slice(0, 400);
+          await upsertScraped(itemId, storeId, best.price, best.unit, true, note, best.imageUrl);
+          upserted = 1;
+          summary.pricesUpserted += upserted;
+        }
+        await logRun(retailer, entry.query, attempt.status, mine.length, upserted, attempt.error ?? "", attempt.sampleUrl ?? "");
+        summary.attempts.push(attempt);
+        console.log(`[serp:${retailer}] "${entry.query}": ${attempt.status} (${mine.length} offers, ${upserted} upserted)`);
+      }
+      await sleep(1000);
     }
   }
   return summary;

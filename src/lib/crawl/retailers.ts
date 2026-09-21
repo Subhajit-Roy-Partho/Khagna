@@ -35,6 +35,14 @@ export const RETAILERS: Record<RetailerId, RetailerConfig> = {
     zip: "85281",
     searchUrl: (q) => `https://www.frysfood.com/search?query=${encodeURIComponent(q)}`,
   },
+  target: {
+    id: "target",
+    label: "Target",
+    zip: "85281",
+    // Direct search is PerimeterX-walled (incl. the redsky JSON API), so this URL
+    // is provenance/sample only — real offers arrive via Google Shopping backfill.
+    searchUrl: (q) => `https://www.target.com/s?search_term=${encodeURIComponent(q)}`,
+  },
 };
 
 // ---------- extraction cascade ----------
@@ -154,6 +162,15 @@ const DOM_SELECTORS: Record<RetailerId, { card: string; name: string; price: str
     img: '[data-testid="product-image-loaded"], img',
     link: 'a[href^="/p/"]',
     unitprice: '[data-testid="product-item-sizing"]',
+  },
+  target: {
+    // Direct fetch is PerimeterX-walled; kept for type-completeness.
+    // Real Target offers arrive via the Google Shopping backfill (serpapi.ts).
+    card: '[data-test="product-card"]',
+    name: "h3",
+    price: '[data-test="product-price"]',
+    img: "img",
+    link: "a",
   },
 };
 
