@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Khagna — pay the least, every time</title>
+<meta name="description" content="Khagna compares grocery prices across local stores and online, then matches the credit card that pays you back the most." />
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; background: #04120d; color: #ecfdf5; }
+  .mesh { background:
+    radial-gradient(600px 300px at 15% 20%, rgba(52,211,153,.25), transparent 60%),
+    radial-gradient(700px 350px at 85% 15%, rgba(34,211,238,.22), transparent 60%),
+    linear-gradient(160deg, #04120d 0%, #06231a 55%, #083344 100%); }
+  .wrap { max-width: 1024px; margin: 0 auto; padding: 24px 20px 60px; }
+  header { display: flex; align-items: center; justify-content: space-between; padding: 18px 0; }
+  .logo { display: flex; align-items: center; gap: 10px; font-size: 22px; font-weight: 800; }
+  .badge-x { display: grid; place-items: center; width: 38px; height: 38px; border-radius: 12px;
+    background: linear-gradient(135deg, #10b981, #06b6d4); font-weight: 900; box-shadow: 0 8px 24px rgba(16,185,129,.4); }
+  .pill { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; background: rgba(255,255,255,.1);
+    border: 1px solid rgba(255,255,255,.2); padding: 4px 10px; border-radius: 999px; }
+  .hero { text-align: center; padding: 60px 0 40px; }
+  .hero h1 { font-size: clamp(34px, 6vw, 60px); font-weight: 900; line-height: 1.05; }
+  .grad { background: linear-gradient(92deg, #6ee7b7, #34d399 40%, #22d3ee); -webkit-background-clip: text; background-clip: text; color: transparent; }
+  .hero p { margin: 18px auto 0; max-width: 640px; color: rgba(236,253,245,.8); font-size: 17px; line-height: 1.6; }
+  .cta { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; margin-top: 28px; }
+  .btn { display: inline-block; padding: 14px 28px; border-radius: 999px; font-weight: 700; font-size: 15px; text-decoration: none; transition: transform .15s; }
+  .btn:hover { transform: scale(1.04); }
+  .btn-primary { background: #fff; color: #064e3b; }
+  .btn-ghost { border: 1px solid rgba(255,255,255,.35); color: #fff; background: rgba(255,255,255,.08); }
+  .grid { display: grid; gap: 16px; margin-top: 48px; }
+  @media (min-width: 720px) { .grid { grid-template-columns: repeat(3, 1fr); } }
+  .card { background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.12); border-radius: 20px; padding: 24px; }
+  .card .icon { font-size: 30px; }
+  .card h2 { margin: 12px 0 8px; font-size: 18px; }
+  .card p { font-size: 14px; line-height: 1.6; color: rgba(236,253,245,.7); }
+  .cities { margin-top: 44px; text-align: center; font-size: 13px; letter-spacing: 2px; text-transform: uppercase; color: rgba(236,253,245,.55); }
+  footer { margin-top: 48px; padding-top: 20px; border-top: 1px solid rgba(255,255,255,.12);
+    display: flex; justify-content: space-between; flex-wrap: wrap; gap: 8px; font-size: 12px; color: rgba(236,253,245,.5); }
+  footer a { color: #6ee7b7; }
+</style>
+</head>
+<body class="mesh">
+<div class="wrap">
+  <header>
+    <div class="logo"><span class="badge-x">খ</span> Khagna</div>
+    <span class="pill">Preview on GitHub Pages</span>
+  </header>
+
+  <section class="hero">
+    <h1>Pay the <span class="grad">least</span>,<br />every single time.</h1>
+    <p>Khagna compares grocery prices across local stores and online — per kg, lb, oz or piece —
+      then matches the credit card that pays you back the most. This is a static preview;
+      the live app runs on Vercel with a real database.</p>
+    <div class="cta">
+      <!-- TODO: replace href with your Vercel URL after deploying -->
+      <a class="btn btn-primary" href="https://khagna.vercel.app">Open the live app →</a>
+      <a class="btn btn-ghost" href="https://github.com/Subhajit-Roy-Partho/Khagna">View source on GitHub</a>
+    </div>
+  </section>
+
+  <section class="grid">
+    <div class="card"><div class="icon">🛒</div><h2>Store smarts</h2><p>Location + radius map, per-unit converter, distance, quality &amp; stock flags, online vs offline prices.</p></div>
+    <div class="card"><div class="icon">🧺</div><h2>Basket optimizer</h2><p>List many items — Khagna finds the cheapest store mix with the least travel.</p></div>
+    <div class="card"><div class="icon">💳</div><h2>Card matcher</h2><p>Every benefit catalogued. Search a category or place and get the best card instantly.</p></div>
+  </section>
+
+  <p class="cities">📍 Kolkata · Dubai · Chicago · Delhi · Mumbai · Doha · New York · Riyadh · Houston</p>
+
+  <footer>
+    <span>Khagna — scraped prices win over manual · images via Cloudinary</span>
+    <span>Full app: <a href="https://khagna.vercel.app">khagna.vercel.app</a></span>
+  </footer>
+</div>
+</body>
+</html>
