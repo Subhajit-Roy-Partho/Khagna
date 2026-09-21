@@ -131,9 +131,9 @@ export default function StoresPage() {
             </div>
             {options.length === 0 && <p className="mt-2 text-sm text-gray-500">No stores in range.</p>}
             <div className="mt-2 overflow-x-auto">
-              <table className="w-full min-w-[640px] text-sm">
+              <table className="w-full min-w-[720px] text-sm">
                 <thead><tr className="text-left text-xs text-gray-500">
-                  <th className="py-1">Store</th><th>Dist</th><th>Quoted</th><th>Per {unit}</th><th>Quality</th><th>Stock</th><th>Src</th><th>Correct</th>
+                  <th className="py-1">Item</th><th>Store</th><th>Dist</th><th>Quoted</th><th>Per {unit}</th><th>Quality</th><th>Stock</th><th>Src</th><th>Correct</th>
                 </tr></thead>
                 <tbody>
                   {(options as Record<string, unknown>[]).map((o) => {
@@ -143,6 +143,21 @@ export default function StoresPage() {
                     const dist = Number(o.distanceKm);
                     return (
                       <tr key={String(o.id)} className="border-t">
+                        <td className="py-2 pr-2">
+                          {String(o.image_url || "") ? (
+                            // plain <img> (not next/image): retailer CDNs aren't in remotePatterns,
+                            // and hotlinked product shots help identify the exact pack.
+                            <img
+                              src={String(o.image_url)}
+                              alt={item.name_en}
+                              loading="lazy"
+                              className="h-12 w-12 rounded-lg border object-cover"
+                              onError={(e) => { e.currentTarget.style.display = "none"; }}
+                            />
+                          ) : (
+                            <span className="grid h-12 w-12 place-items-center rounded-lg bg-zinc-100 text-lg">🛒</span>
+                          )}
+                        </td>
                         <td className="py-2 pr-2 font-medium">{String(o.store_name)} <span className="text-xs text-gray-400">{Number(o.is_online) ? "· online" : `· ${String(o.store_city)}`}</span></td>
                         <td>{Number(o.store_lat) === 0 ? "online" : isFinite(dist) ? `${dist.toFixed(1)} km` : "—"}</td>
                         <td>${quoted.toFixed(2)}/{String(o.unit)}</td>

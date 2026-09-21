@@ -2,16 +2,22 @@
 
 Next.js (App Router + Tailwind) web app, mobile + laptop responsive, no AI yet.
 
+> 📚 **Extensive documentation lives in [`docs/`](docs/00-index.md)** — product
+> overview, architecture, data model, API reference, crawler guide, deployment.
+> Start there; this README is the quick-start.
+
 - **Stores:** item-first comparison (English + Bengali + alt names), per kg/g/lb/oz/piece
   with unit converter, city + radius + map (Leaflet/OSM, no API key), distance,
   store vs online price, quality + stock flags, multi-item basket optimizer
-  (cheapest + least travel).
+  (cheapest + least travel). Scraped offers show the retailer's **product photo**.
 - **Cards:** all benefits per card, search by category/place → ranked best card.
-- **Freshness:** server scraper (`POST /api/scrape`, `scripts/scraper.ts`) overwrites
-  manual prices (`source='scraped'`). Manual edits within 7 days of a fresh scrape
-  are queued in `corrections` for review.
-- **DB:** Turso (libsql). **Images:** Cloudinary with aggressive compression
-  (`q_auto:low,f_auto,strip_profile`, max 800px).
+- **Freshness:** the Tempe grocery crawler (`npm run crawl:tempe`, `POST /api/crawl`,
+  nightly cron) writes `source='scraped'` rows that **win over manual edits**.
+  Manual edits within 7 days of a fresh scrape are queued in `corrections`.
+  Every run is audited in `crawl_runs` — including `blocked`/`empty`, never faked.
+- **DB:** Turso (libsql). **Images:** Cloudinary aggressive compression for uploads;
+  retailer CDN hotlinks for scraped product shots.
+- **Focus area:** Tempe AZ (+ Mesa, Chandler) — 8 real stores, 24-item catalog.
 
 ## Setup
 
@@ -47,8 +53,20 @@ bindings aren't available on its glibc.)
 | `GET/POST /api/comments` | flags (`low_stock`,`bad_product`…), corrections log |
 | `POST /api/upload` | multipart `file` → aggressively compressed Cloudinary URL |
 | `POST /api/scrape` | `{"runAll":true}` or `{"targets":[{item_id,store_id,url,cssSelector}]}` |
+| `POST /api/crawl` | run Tempe grocery crawler; `GET /api/crawl` shows runs + coverage |
 
-## Scraper cron
+## Tempe grocery crawler (real prices)
+
+```bash
+npm run crawl:tempe -- --retailers=frys --limit=5        # Fry's: working, with photos
+npm run crawl:tempe -- --seed-only                       # just seed the 8 real stores
+npm run crawl:tempe -- --dry-run                         # fetch + parse, write nothing
+```
+
+Status (measured): Fry's ✅ live · Walmart/Sam's 🛑 bot-walled · Costco ⚠️ client-rendered.
+Full story + how to unblock the rest: [`docs/05-crawler-guide.md`](docs/05-crawler-guide.md).
+
+## Scraper cron (legacy generic endpoint)
 
 ```bash
 npm run scrape   # reads SCRAPE_TARGETS in scripts/scraper.ts, else refreshes stalest 20

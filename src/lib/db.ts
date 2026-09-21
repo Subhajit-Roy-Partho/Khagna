@@ -52,7 +52,8 @@ CREATE TABLE IF NOT EXISTS prices (
   is_online INTEGER DEFAULT 0,
   source TEXT DEFAULT 'manual',
   updated_at TEXT DEFAULT (datetime('now')),
-  note TEXT DEFAULT ''
+  note TEXT DEFAULT '',
+  image_url TEXT DEFAULT ''
 );
 CREATE TABLE IF NOT EXISTS cards (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -96,6 +97,19 @@ CREATE INDEX IF NOT EXISTS idx_prices_item ON prices(item_id);
 CREATE INDEX IF NOT EXISTS idx_prices_store ON prices(store_id);
 CREATE INDEX IF NOT EXISTS idx_benefits_card ON card_benefits(card_id);
 CREATE INDEX IF NOT EXISTS idx_benefits_cat ON card_benefits(category);
+CREATE TABLE IF NOT EXISTS crawl_runs (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  retailer TEXT NOT NULL,
+  query TEXT NOT NULL DEFAULT '',
+  status TEXT DEFAULT 'ok',
+  items_found INTEGER DEFAULT 0,
+  prices_upserted INTEGER DEFAULT 0,
+  started_at TEXT DEFAULT (datetime('now')),
+  finished_at TEXT DEFAULT '',
+  error TEXT DEFAULT '',
+  sample_url TEXT DEFAULT ''
+);
+CREATE INDEX IF NOT EXISTS idx_crawl_runs_retailer ON crawl_runs(retailer);
 `;
 
 export async function initDb() {
@@ -105,6 +119,21 @@ export async function initDb() {
     .filter(Boolean);
   for (const sql of statements) {
     await db.execute(sql);
+  }
+  await migrate();
+  return true;
+}
+
+// Additive migrations for databases created before a column/table existed.
+// Safe to run on every boot: each step checks first.
+export async function migrate() {
+  const db = getDb();
+  const info = await db.execute("PRAGMA table_info(prices)");
+  const cols = new Set(
+    info.rows.map((r) => String((r as unknown as Record<string, unknown>).name))
+  );
+  if (!cols.has("image_url")) {
+    await db.execute("ALTER TABLE prices ADD COLUMN image_url TEXT DEFAULT ''");
   }
   return true;
 }
@@ -144,6 +173,7 @@ export type PriceRow = {
   source: string;
   updated_at: string;
   note: string;
+  image_url?: string;
   store_name?: string;
   store_city?: string;
   store_lat?: number;
@@ -172,4 +202,17 @@ export type CardBenefit = {
   description: string;
   card_name?: string;
   bank?: string;
+};
+
+export type CrawlRun = {
+  id: number;
+  retailer: string;
+  query: string;
+  status: string;
+  items_found: number;
+  prices_upserted: number;
+  started_at: string;
+  finished_at: string;
+  error: string;
+  sample_url: string;
 };

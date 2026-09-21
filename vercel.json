@@ -2,7 +2,7 @@
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "crons": [
     {
-      "path": "/api/scrape?runAll=1",
+      "path": "/api/crawl?run=1",
       "schedule": "0 6 * * *"
     }
   ]
