@@ -9,7 +9,7 @@ one best-offer row per item into Turso. Code lives in `src/lib/crawl/`, runnable
 
 | Retailer | Search URL pattern | Result |
 |---|---|---|
-| Fry's (Kroger) | `frysfood.com/search?query=` | ✅ **Working** — SSR markup + embedded pricing JSON, 21/24 catalog items live |
+| Fry's (Kroger) | `frysfood.com/search?query=` | ✅ **Working from residential IPs** — SSR markup + embedded pricing JSON, 21/24 catalog items live. ❌ **Fails from Vercel/datacenters** (connection aborted, HTTP 0 — verified Sep 2026) |
 | Walmart | `walmart.com/search?q=` | 🛑 PerimeterX `/blocked` ("Robot or human?" captcha) |
 | Sam's Club | `samsclub.com/s/` | 🛑 PerimeterX `are-you-human` (`px-captcha`) |
 | Costco | `costco.com/s?keyword=` | ⚠️ Page loads (Kasada present) but prices render client-side only — nothing extractable server-side |
@@ -88,7 +88,10 @@ residential proxies are the realistic way past Walmart/Sam's walls from servers)
   Use `POST /api/crawl` (no subset) for full 24-query runs from anywhere else.
 - **GitHub Actions**: add a `schedule:` workflow POSTing to `/api/crawl` — needs no
   secrets beyond the public URL, but datacenter IPs face the same bot walls.
-- **Your own machine**: best success rate (residential IP) — `npm run crawl:tempe`.
+- **Your own machine (recommended for real refreshes)**: residential IPs succeed where
+  datacenters fail — `npm run crawl:tempe` locally, on a cron/Task Scheduler, is
+  currently the reliable way to refresh Fry's prices. Verified: sandbox run wrote
+  21 live prices; the identical run from Vercel aborts at the network level.
 
 ## Getting the blocked retailers for real (honest options)
 
