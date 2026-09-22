@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getDb, initDb } from "@/lib/db";
+import { requireUser } from "@/lib/require-user";
 
 export async function GET(req: NextRequest) {
   try {
@@ -23,6 +24,8 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   try {
+    const auth = await requireUser();
+    if ("error" in auth) return auth.error;
     await initDb();
     const db = getDb();
     const b = await req.json();

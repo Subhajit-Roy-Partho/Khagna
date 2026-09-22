@@ -42,6 +42,11 @@ export function formatPrice(price: number, currency = "$"): string {
 }
 
 export const CITIES = [
+  "Tempe",
+  "Mesa",
+  "Chandler",
+  "Phoenix",
+  "Scottsdale",
   "New York",
   "Chicago",
   "Houston",
@@ -60,7 +65,11 @@ export const CITIES = [
 
 // approx city centers for map default
 export const CITY_COORDS: Record<string, { lat: number; lng: number }> = {
-  "New York": { lat: 40.7128, lng: -74.006 },
+  Tempe: { lat: 33.4255, lng: -111.94 },
+  Mesa: { lat: 33.4152, lng: -111.8315 },
+  Chandler: { lat: 33.3062, lng: -111.8413 },
+  Phoenix: { lat: 33.4484, lng: -112.074 },
+  Scottsdale: { lat: 33.4942, lng: -111.9261 },
   Chicago: { lat: 41.8781, lng: -87.6298 },
   Houston: { lat: 29.7604, lng: -95.3698 },
   "San Francisco": { lat: 37.7749, lng: -122.4194 },

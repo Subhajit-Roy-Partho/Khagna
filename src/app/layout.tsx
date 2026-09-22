@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import Script from "next/script";
+import Providers from "@/components/Providers";
+import AuthButton from "@/components/AuthButton";
 import "./globals.css";
 
 const GA_ID = "G-35HJ7KPD22";
@@ -50,6 +52,7 @@ function Nav() {
           >
             Compare prices
           </a>
+          <AuthButton />
         </div>
       </div>
       {/* mobile bottom nav */}
@@ -78,6 +81,7 @@ gtag('config', '${GA_ID}');`}
         </Script>
       </head>
       <body className="min-h-full flex flex-col pb-16 md:pb-0">
+        <Providers>
         <Nav />
         <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-6">{children}</main>
         <footer className="mt-8 border-t border-emerald-100 bg-white/70 py-6 backdrop-blur">
@@ -88,6 +92,7 @@ gtag('config', '${GA_ID}');`}
             <p>Scraped prices win over manual · images via Cloudinary (aggressively compressed)</p>
           </div>
         </footer>
+        </Providers>
       </body>
     </html>
   );

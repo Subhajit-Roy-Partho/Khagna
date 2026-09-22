@@ -25,6 +25,9 @@ Environment Variables** (exact lowercase names; the code reads these first):
 | `LLM_MODEL` *(optional)* | Override the default model |
 | `CRAWL_PROXY` *(optional)* | Residential proxy for server-side crawls |
 | `SERPAPI_KEY` *(optional, also accepts `SerpAPI` / `SerpApiKey`)* | Google Shopping backfill for Walmart/Target/Costco/Sam's (free 100/mo) |
+| `AUTH_GITHUB_ID` / `AUTH_GITHUB_SECRET` *(optional)* | GitHub OAuth sign-in |
+| `AUTH_GOOGLE_ID` / `AUTH_GOOGLE_SECRET` *(optional)* | Google OAuth sign-in |
+| `NEXTAUTH_SECRET` *(required if any OAuth is used)* | NextAuth session encryption (`openssl rand -base64 32`) |
 
 `NEXT_PUBLIC_GA_ID` is not needed — the GA tag ID is constants in `layout.tsx`.
 
@@ -40,9 +43,33 @@ Environment Variables** (exact lowercase names; the code reads these first):
 
 ## Cron
 
-`vercel.json` schedules `GET /api/crawl?run=1` daily 06:00 UTC (8-staple subset —
-Hobby plans cap function duration at 60s, so the cron path deliberately stays small;
-full runs go through `POST /api/crawl`).
+`vercel.json` schedules `GET /api/crawl?run=1&retailers=frys,target,walmart,samsclub,costco&limit=3`
+**weekly** (Monday 06:00 UTC, 8-staple subset ≈ 8 SerpApi searches — Hobby plans cap
+function duration at 60s, so the cron path deliberately stays small; full runs go
+through `POST /api/crawl` or the dashboard's “Run grocery crawl now” button, which
+requires sign-in).
+
+## Authentication setup (required for any writes)
+
+Reads are public; every write (price corrections, comments, stores, cards,
+benefits) requires sign-in. Three methods, mix and match:
+
+1. **GitHub OAuth** — github.com/settings/developers → New OAuth App →
+   Homepage URL = your site, Authorization callback URL =
+   `https://<your-app>/api/auth/callback/github` → set `AUTH_GITHUB_ID` +
+   `AUTH_GITHUB_SECRET`.
+2. **Google OAuth** — console.cloud.google.com → Credentials → OAuth client ID
+   (Web) → Authorized redirect URI =
+   `https://<your-app>/api/auth/callback/google` → `AUTH_GOOGLE_ID` +
+   `AUTH_GOOGLE_SECRET`.
+3. **Email + password** — works with zero setup: users register at `/signin`
+   (bcrypt-hashed, `users` table). At least one OAuth method is recommended for
+   production so password resets aren't your problem.
+4. Always set `NEXTAUTH_SECRET` (any random 32+ chars) wherever OAuth is used,
+   and add all of the above to Vercel env vars + redeploy.
+
+The navbar shows the signed-in user's name/avatar; corrections and comments store
+`author_name`/`author_image` and display them.
 
 ## Local development
 

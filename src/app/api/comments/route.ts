@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getDb, initDb } from "@/lib/db";
+import { requireUser } from "@/lib/require-user";
 
 export async function GET() {
   try {
@@ -16,13 +17,15 @@ export async function GET() {
 
 export async function POST(req: NextRequest) {
   try {
+    const auth = await requireUser();
+    if ("error" in auth) return auth.error;
     await initDb();
     const db = getDb();
     const b = await req.json();
     if (!b.text) return NextResponse.json({ ok: false, error: "text required" }, { status: 400 });
     await db.execute({
-      sql: "INSERT INTO comments (store_id, item_id, text, tag) VALUES (?,?,?,?)",
-      args: [b.store_id || null, b.item_id || null, b.text, b.tag || "info"],
+      sql: "INSERT INTO comments (store_id, item_id, text, tag, author_name, author_image) VALUES (?,?,?,?,?,?)",
+      args: [b.store_id || null, b.item_id || null, b.text, b.tag || "info", auth.user.name, auth.user.image],
     });
     return NextResponse.json({ ok: true });
   } catch (e: unknown) {

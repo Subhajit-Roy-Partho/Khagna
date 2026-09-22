@@ -98,12 +98,16 @@ residential proxies are the realistic way past Walmart/Sam's walls from servers)
 
 ## Scheduling
 
-- **Vercel cron** (`vercel.json`): `GET /api/crawl?run=1` daily 06:00 UTC. Vercel cron
+- **Vercel cron** (`vercel.json`): `GET /api/crawl?run=1&retailers=frys,target,walmart,samsclub,costco&limit=3`
+  every **Monday 06:00 UTC** (weekly — fits Hobby plan limits and the SerpApi free
+  tier: 8 staples ≈ 8 searches/week ≈ 32/month + free cache repeats). Vercel cron
   only sends GET, so that path runs the pipeline with an 8-staple subset
   (milk, eggs, bread, chicken, banana, basmati, sugar, coffee) to stay under
   serverless timeouts (Hobby caps `maxDuration` at 60s despite the route's 300s setting).
   Override inline, e.g. `/api/crawl?run=1&retailers=frys&queries=milk,eggs&limit=5`.
   Use `POST /api/crawl` (no subset) for full 24-query runs from anywhere else.
+- **On demand**: the dashboard has a “Run grocery crawl now” button (same pipeline,
+  sign-in required), or `POST /api/crawl` with any HTTP client.
 - **GitHub Actions**: add a `schedule:` workflow POSTing to `/api/crawl` — needs no
   secrets beyond the public URL, but datacenter IPs face the same bot walls.
 - **Your own machine (recommended for real refreshes)**: residential IPs succeed where

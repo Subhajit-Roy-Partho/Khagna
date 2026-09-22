@@ -18,8 +18,8 @@
   underneath with quoted price, converted price, quality, stock flag, distance, and source.
 - **Unit converter:** pick per kg / g / lb / oz / piece; weight prices are normalized to
   per-kg so sorting is fair. Piece items sort separately (they're not weight-comparable).
-- **Location-aware:** use GPS or pick a city; set a radius (km); stores render on a
-  Leaflet/OpenStreetMap map with a radius circle. Online offers always pass the filter.
+- **Location-aware:** defaults to **Tempe, AZ** (change city/GPS and hit “💾 Set as
+  default” to remember yours); radius slider; Leaflet map with radius circle.
 - **Store vs online:** filter both / online-only / physical-only.
 - **Product photos:** scraped offers carry the retailer's own product image so shoppers
   can confirm the exact pack.
@@ -29,15 +29,21 @@ Enter several items with quantities → Khagna returns up to 5 plans ranked by
 `subtotal + $2 per extra store stop + ~$0.30/km round-trip travel`, i.e. cheapest
 overall *with least travel*. Includes single-store (minimum travel) options.
 
-### 💳 Card matcher (`/cards`)
+### 💳 Card matcher (`/cards` + `/cards/[id]`)
 Every card catalogues all its benefits (category, merchant/place, rate, cap, description).
 Search a category (*grocery*), a place (*airlines*, *online*), or free text → cards are
 ranked by `best matching rate × 10 + rating − annual_fee/1000`.
+Mark cards you own (**+ Mine**); the “🎯 Only my cards” filter defaults **on**.
+Every card has a dedicated page (generated from the DB) with all benefits, an
+owned toggle, and an add-benefit form; the add-card form jumps straight to the new page.
 
-### 🙋 Dashboard (`/dashboard`)
-- Correct a price (goes live immediately — unless a fresh scrape exists, see below).
+### 🙋 Dashboard (`/dashboard`) + sign-in (`/signin`)
+- **Click-to-correct inline:** click any price, ★ quality, or stock badge in `/stores`
+  to edit it in place — no separate correction tab.
+- **Auth required for all writes:** GitHub, Google, or email+password (`/signin`).
+  The navbar shows your name/avatar; corrections and comments carry your byline.
 - Comment / flag: `low_stock`, `out_of_stock`, `bad_product`, `good_deal`, `price_wrong`.
-- Add stores, add cards + benefits, trigger scrapes, review the corrections queue.
+- Add stores, trigger the grocery crawl on demand, review the corrections queue.
 
 ## Data freshness model
 

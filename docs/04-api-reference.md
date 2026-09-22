@@ -9,10 +9,14 @@ when tables are empty.
 | Page | Path | Description |
 |---|---|---|
 | Home | `/` | 3D hero, features, how-it-works |
-| Compare | `/stores` | search + radius/city + map + unit converter + thumbnails + inline correction |
+| Compare | `/stores` | search + radius/city + map + unit converter + thumbnails + click-to-correct |
 | Basket | `/basket` | multi-item cheapest + least-travel plans |
-| Cards | `/cards` | category/place search → ranked cards + add card |
-| Dashboard | `/dashboard` | comments/flags, add store, run scraper, review queues |
+| Cards | `/cards` | category/place search → ranked cards, owned filter, add card |
+| Card detail | `/cards/[id]` | DB-generated page: benefits, owned toggle, add benefit |
+| Sign in | `/signin` | GitHub / Google / email+password + registration |
+| Dashboard | `/dashboard` | comments/flags, add store, on-demand crawl, review queues |
+
+> 🔒 Reads are public. All `POST`s below (except auth) return **401 unless signed in**.
 
 ## `GET /api/items` — item-first search
 ```
@@ -32,9 +36,16 @@ when tables are empty.
 - `POST {item_id, store_id, price, unit, quality?, stock_level?, is_online?, comment?}`
   → `{ ok, queued }`. `queued=true` means a fresh scrape won and your edit is pending review.
 
-## `GET/POST /api/cards`
-- `GET ?category=grocery&place=airlines&q=` → `{ results: [{ card, benefits, matched, bestRate, score }] }` ranked best-first.
-- `POST {name, bank?, annual_fee?, rating?, apply_url?, benefits: [{category, merchant_place, reward_rate, reward_type?, cap?, description?}]}`.
+## `GET /api/cards`
+- `GET ?category=grocery&place=airlines&q=` → ranked `{ results }`.
+- `GET ?id=12` → `{ card, benefits }` (powers `/cards/[id]`).
+- `POST` (auth) — new card `{name, bank?, …, benefits?[]}` → `{ ok, id }`,
+  or add one benefit `{card_id, benefit: {…}}` → `{ ok }`.
+
+## Auth endpoints
+- NextAuth: `/api/auth/*` (GitHub + Google OAuth, credentials).
+- `POST /api/auth/register {name, email, password}` → creates a bcrypt-hashed
+  password account (open registration, 8+ char passwords).
 
 ## `GET/POST /api/comments`
 - `GET` → `{ corrections (100), comments (100) }` newest first.

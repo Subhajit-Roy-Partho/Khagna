@@ -1,7 +1,8 @@
 "use client";
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { CITY_COORDS, convertPrice } from "@/lib/units";
+import { convertPrice } from "@/lib/units";
+import { loadLoc } from "@/lib/location-pref";
 import { haversineKm, optimizeBasket, type BasketOption } from "@/lib/geo";
 
 type Found = { item: { id: number; name_en: string }; options: Record<string, unknown>[] };
@@ -11,8 +12,8 @@ export default function BasketPage() {
     { q: "basmati", qty: 2, unit: "kg" },
     { q: "masoor", qty: 1, unit: "kg" },
   ]);
-  const [lat, setLat] = useState(CITY_COORDS["Chicago"].lat);
-  const [lng, setLng] = useState(CITY_COORDS["Chicago"].lng);
+  const [lat, setLat] = useState(() => loadLoc().lat);
+  const [lng, setLng] = useState(() => loadLoc().lng);
   const [plans, setPlans] = useState<ReturnType<typeof optimizeBasket>>([]);
   const [loading, setLoading] = useState(false);
 

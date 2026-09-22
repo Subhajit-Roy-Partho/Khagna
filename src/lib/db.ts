@@ -110,6 +110,14 @@ CREATE TABLE IF NOT EXISTS crawl_runs (
   sample_url TEXT DEFAULT ''
 );
 CREATE INDEX IF NOT EXISTS idx_crawl_runs_retailer ON crawl_runs(retailer);
+CREATE TABLE IF NOT EXISTS users (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  name TEXT DEFAULT '',
+  email TEXT NOT NULL UNIQUE,
+  password_hash TEXT DEFAULT '',
+  image TEXT DEFAULT '',
+  created_at TEXT DEFAULT (datetime('now'))
+);
 `;
 
 export async function initDb() {
@@ -134,6 +142,18 @@ export async function migrate() {
   );
   if (!cols.has("image_url")) {
     await db.execute("ALTER TABLE prices ADD COLUMN image_url TEXT DEFAULT ''");
+  }
+  for (const table of ["corrections", "comments"] as const) {
+    const tinfo = await db.execute(`PRAGMA table_info(${table})`);
+    const tcols = new Set(
+      tinfo.rows.map((r) => String((r as unknown as Record<string, unknown>).name))
+    );
+    if (!tcols.has("author_name")) {
+      await db.execute(`ALTER TABLE ${table} ADD COLUMN author_name TEXT DEFAULT ''`);
+    }
+    if (!tcols.has("author_image")) {
+      await db.execute(`ALTER TABLE ${table} ADD COLUMN author_image TEXT DEFAULT ''`);
+    }
   }
   return true;
 }
