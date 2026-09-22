@@ -23,7 +23,7 @@ export type MerchantOffer = {
 };
 
 function key(): string {
-  return process.env.SERPAPI_KEY || process.env.SerpApiKey || "";
+  return process.env.SERPAPI_KEY || process.env.SerpApiKey || process.env.SerpAPI || "";
 }
 
 export function serpEnabled(): boolean {
