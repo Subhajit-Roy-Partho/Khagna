@@ -71,8 +71,8 @@ export async function POST(req: NextRequest) {
     }
     if (!b.name) return NextResponse.json({ ok: false, error: "name required" }, { status: 400 });
     const r = await db.execute({
-      sql: "INSERT INTO cards (name, bank, image_url, annual_fee, rating, apply_url) VALUES (?,?,?,?,?,?)",
-      args: [b.name, b.bank || "", b.image_url || "", Number(b.annual_fee) || 0, Number(b.rating) || 0, b.apply_url || ""],
+      sql: "INSERT INTO cards (name, bank, image_url, annual_fee, rating, apply_url, customer_care, fraud_number, bank_website) VALUES (?,?,?,?,?,?,?,?,?)",
+      args: [b.name, b.bank || "", b.image_url || "", Number(b.annual_fee) || 0, Number(b.rating) || 0, b.apply_url || "", b.customer_care || "", b.fraud_number || "", b.bank_website || ""],
     });
     const cardId = Number(r.lastInsertRowid);
     for (const ben of b.benefits || []) {
@@ -82,6 +82,43 @@ export async function POST(req: NextRequest) {
       });
     }
     return NextResponse.json({ ok: true, id: cardId });
+  } catch (e: unknown) {
+    const msg = e instanceof Error ? e.message : String(e);
+    return NextResponse.json({ ok: false, error: msg }, { status: 500 });
+  }
+}
+
+// PATCH /api/cards {id, name?, bank?, image_url?, annual_fee?, rating?, apply_url?,
+//   customer_care?, fraud_number?, bank_website?} — edit card details (auth).
+export async function PATCH(req: NextRequest) {
+  try {
+    const auth = await requireUser();
+    if ("error" in auth) return auth.error;
+    await initDb();
+    const db = getDb();
+    const b = await req.json();
+    const id = Number(b.id);
+    if (!isFinite(id) || id <= 0) {
+      return NextResponse.json({ ok: false, error: "valid id required" }, { status: 400 });
+    }
+    const fields: string[] = [];
+    const args: (string | number)[] = [];
+    const str = (k: string) => {
+      if (b[k] !== undefined) {
+        fields.push(`${k}=?`);
+        args.push(String(b[k]).slice(0, 300));
+      }
+    };
+    str("name"); str("bank"); str("image_url"); str("apply_url");
+    str("customer_care"); str("fraud_number"); str("bank_website");
+    if (b.annual_fee !== undefined) { fields.push("annual_fee=?"); args.push(Number(b.annual_fee) || 0); }
+    if (b.rating !== undefined) { fields.push("rating=?"); args.push(Math.min(5, Math.max(0, Number(b.rating) || 0))); }
+    if (fields.length === 0) {
+      return NextResponse.json({ ok: false, error: "nothing to update" }, { status: 400 });
+    }
+    args.push(id);
+    await db.execute({ sql: `UPDATE cards SET ${fields.join(", ")} WHERE id=?`, args });
+    return NextResponse.json({ ok: true });
   } catch (e: unknown) {
     const msg = e instanceof Error ? e.message : String(e);
     return NextResponse.json({ ok: false, error: msg }, { status: 500 });

@@ -71,8 +71,16 @@ export default function DashboardPage() {
     setMsg(j.ok ? `Scraper updated ${j.updated} prices (scraped wins over manual) ✓` : `Error: ${j.error}`);
   }
 
-  async function runCrawl() {
-    setMsg("Crawling Tempe groceries (Fry's direct + Google Shopping backfill)…");
+  async function seedCards() {
+    if (needAuth()) return;
+    setMsg("Seeding USA cards catalog…");
+    const r = await fetch("/api/seed-usa-cards", { method: "POST" });
+    const j = await r.json();
+    if (j.ok === false && r.status === 401) { router.push("/signin"); return; }
+    setMsg(j.ok ? `USA cards: +${j.cardsAdded} new, ${j.cardsKept} kept · +${j.bensAdded} benefits ✓` : `Error: ${j.error}`);
+  }
+
+  async function runCrawl() {    setMsg("Crawling Tempe groceries (Fry's direct + Google Shopping backfill)…");
     const r = await fetch("/api/crawl", {
       method: "POST", headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ retailers: ["frys", "target", "walmart", "samsclub", "costco"], limit: 3 }),
@@ -131,6 +139,7 @@ export default function DashboardPage() {
           <p className="text-xs text-gray-500">Frys direct plus Google Shopping backfill for Target, Walmart, Costco and Sams Club. Also runs weekly automatically.</p>
           <div className="mt-2 flex flex-wrap gap-2">
             <button onClick={runCrawl} className="rounded bg-emerald-600 px-4 py-2 text-sm font-bold text-white">▶ Run grocery crawl now</button>
+            <button onClick={seedCards} className="rounded bg-zinc-900 px-4 py-2 text-sm font-bold text-white">💳 Seed USA cards</button>
             <button onClick={runScrape} className="rounded border px-4 py-2 text-sm font-semibold">Legacy scraper</button>
           </div>
           {msg && <p className="mt-2 text-sm text-emerald-700">{msg}</p>}

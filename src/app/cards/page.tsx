@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
@@ -7,7 +7,7 @@ import Link from "next/link";
 import { getOwned, toggleOwned, getOwnedOnly, setOwnedOnly } from "@/lib/owned-cards";
 
 type Scored = {
-  card: { id: number; name: string; bank: string; image_url: string; annual_fee: number; rating: number };
+  card: { id: number; name: string; bank: string; image_url: string; annual_fee: number; rating: number; customer_care: string; fraud_number: string; bank_website: string };
   benefits: Record<string, unknown>[];
   matched: Record<string, unknown>[];
   bestRate: number;
@@ -25,7 +25,9 @@ export default function CardsPage() {
   const [results, setResults] = useState<Scored[]>([]);
   const [owned, setOwned] = useState<number[]>(() => getOwned());
   const [ownedOnly, setOwnedOnlyState] = useState(() => getOwnedOnly());
-  const [form, setForm] = useState({ name: "", bank: "", annual_fee: "0", category: "grocery", merchant_place: "any", reward_rate: "5", description: "" });
+  const [form, setForm] = useState({ name: "", bank: "", annual_fee: "0", rating: "4", image_url: "", apply_url: "", customer_care: "", fraud_number: "", bank_website: "", category: "grocery", merchant_place: "any", reward_rate: "5", reward_type: "cashback", description: "" });
+  const [uploadBusy, setUploadBusy] = useState(false);
+  const fileRef = useRef<HTMLInputElement>(null);
 
   async function search() {
     const sp = new URLSearchParams({ category, place, q });
@@ -66,15 +68,36 @@ export default function CardsPage() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         name: form.name, bank: form.bank, annual_fee: Number(form.annual_fee),
-        benefits: [{ category: form.category, merchant_place: form.merchant_place, reward_rate: Number(form.reward_rate), description: form.description }],
+        rating: Math.min(5, Math.max(0, Number(form.rating) || 0)),
+        image_url: form.image_url, apply_url: form.apply_url,
+        customer_care: form.customer_care, fraud_number: form.fraud_number, bank_website: form.bank_website,
+        benefits: [{ category: form.category, merchant_place: form.merchant_place, reward_rate: Number(form.reward_rate), reward_type: form.reward_type, description: form.description }],
       }),
     });
     const j = await r.json();
     if (j.ok === false && r.status === 401) { router.push("/signin"); return; }
     if (j.ok) {
       setOwned(toggleOwned(Number(j.id))); // a card you add is one you have
-      setForm({ ...form, name: "", description: "" });
+      setForm({ ...form, name: "", description: "", image_url: "" });
       router.push(`/cards/${j.id}`);
+    }
+  }
+
+  async function uploadFormImage(file: File) {
+    if (!session?.user) {
+      if (confirm("Sign in to add cards. Go to sign-in?")) router.push("/signin");
+      return;
+    }
+    setUploadBusy(true);
+    try {
+      const fd = new FormData();
+      fd.append("file", file);
+      const up = await fetch("/api/upload", { method: "POST", body: fd });
+      const uj = await up.json();
+      if (uj.ok) setForm({ ...form, image_url: String(uj.url) });
+      else alert(`Upload failed: ${uj.error}`);
+    } finally {
+      setUploadBusy(false);
     }
   }
 
@@ -117,12 +140,18 @@ export default function CardsPage() {
           return (
             <div key={r.card.id} className={`rounded-2xl border p-4 ${i === 0 ? "border-emerald-400 bg-emerald-50" : "bg-white"}`}>
               <div className="flex items-start justify-between gap-2">
-                <h2 className="font-bold">
-                  <Link href={`/cards/${r.card.id}`} className="hover:text-emerald-700 hover:underline">
-                    {i === 0 ? "🏆 " : ""}{r.card.name}
-                  </Link>{" "}
-                  <span className="text-sm font-normal text-gray-500">· {r.card.bank}</span>
-                </h2>
+                <div className="flex min-w-0 items-start gap-3">
+                  {r.card.image_url ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={r.card.image_url} alt={r.card.name} loading="lazy" className="h-12 w-20 shrink-0 rounded-lg border object-cover" />
+                  ) : null}
+                  <h2 className="font-bold">
+                    <Link href={`/cards/${r.card.id}`} className="hover:text-emerald-700 hover:underline">
+                      {i === 0 ? "🏆 " : ""}{r.card.name}
+                    </Link>{" "}
+                    <span className="text-sm font-normal text-gray-500">· {r.card.bank}</span>
+                  </h2>
+                </div>
                 <button
                   onClick={() => flipOwned(r.card.id)}
                   title={mine ? "Remove from my cards" : "I have this card"}
@@ -152,9 +181,23 @@ export default function CardsPage() {
           <input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="Card name" className="rounded border px-3 py-2" />
           <input value={form.bank} onChange={(e) => setForm({ ...form, bank: e.target.value })} placeholder="Bank" className="rounded border px-3 py-2" />
           <input value={form.annual_fee} onChange={(e) => setForm({ ...form, annual_fee: e.target.value })} placeholder="Annual fee" className="rounded border px-3 py-2" />
+          <input value={form.rating} onChange={(e) => setForm({ ...form, rating: e.target.value })} placeholder="Rating 0–5" className="rounded border px-3 py-2" />
+          <input value={form.customer_care} onChange={(e) => setForm({ ...form, customer_care: e.target.value })} placeholder="📞 Customer care number" className="rounded border px-3 py-2" />
+          <input value={form.fraud_number} onChange={(e) => setForm({ ...form, fraud_number: e.target.value })} placeholder="🚨 Lost / fraud number" className="rounded border px-3 py-2" />
+          <input value={form.bank_website} onChange={(e) => setForm({ ...form, bank_website: e.target.value })} placeholder="🌐 Bank website" className="rounded border px-3 py-2" />
+          <input value={form.apply_url} onChange={(e) => setForm({ ...form, apply_url: e.target.value })} placeholder="Apply link (https://…)" className="rounded border px-3 py-2" />
+          <div className="flex items-center gap-2">
+            <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={(e) => { const f = e.target.files?.[0]; if (f) uploadFormImage(f); }} />
+            <button onClick={() => fileRef.current?.click()} disabled={uploadBusy} className="w-full rounded border px-3 py-2 font-semibold hover:bg-zinc-50 disabled:opacity-50">
+              {uploadBusy ? "Uploading…" : form.image_url ? "📷 Image attached ✓ (tap to change)" : "📷 Upload card image"}
+            </button>
+          </div>
           <input value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })} placeholder="category" className="rounded border px-3 py-2" />
-          <input value={form.merchant_place} onChange={(e) => setForm({ ...form, merchant_place: e.target.value })} placeholder="place (any/online/airlines…)" className="rounded border px-3 py-2" />
+          <input value={form.merchant_place} onChange={(e) => setForm({ ...form, merchant_place: e.target.value })} placeholder="place (any/supermarkets/online…)" className="rounded border px-3 py-2" />
           <input value={form.reward_rate} onChange={(e) => setForm({ ...form, reward_rate: e.target.value })} placeholder="reward %" className="rounded border px-3 py-2" />
+          <select value={form.reward_type} onChange={(e) => setForm({ ...form, reward_type: e.target.value })} className="rounded border px-3 py-2">
+            {["cashback", "points", "miles"].map((t) => <option key={t}>{t}</option>)}
+          </select>
           <input value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} placeholder="description" className="md:col-span-2 rounded border px-3 py-2" />
           <button onClick={addCard} className="rounded bg-zinc-900 px-4 py-2 font-bold text-white">Save card → open its page</button>
         </div>

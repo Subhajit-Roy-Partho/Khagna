@@ -62,7 +62,10 @@ CREATE TABLE IF NOT EXISTS cards (
   image_url TEXT DEFAULT '',
   annual_fee REAL DEFAULT 0,
   rating REAL DEFAULT 0,
-  apply_url TEXT DEFAULT ''
+  apply_url TEXT DEFAULT '',
+  customer_care TEXT DEFAULT '',
+  fraud_number TEXT DEFAULT '',
+  bank_website TEXT DEFAULT ''
 );
 CREATE TABLE IF NOT EXISTS card_benefits (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -155,6 +158,16 @@ export async function migrate() {
       await db.execute(`ALTER TABLE ${table} ADD COLUMN author_image TEXT DEFAULT ''`);
     }
   }
+  // Issuer contact fields on cards (customer care, fraud line, bank website).
+  const cinfo = await db.execute("PRAGMA table_info(cards)");
+  const ccols = new Set(
+    cinfo.rows.map((r) => String((r as unknown as Record<string, unknown>).name))
+  );
+  for (const col of ["customer_care", "fraud_number", "bank_website"] as const) {
+    if (!ccols.has(col)) {
+      await db.execute(`ALTER TABLE cards ADD COLUMN ${col} TEXT DEFAULT ''`);
+    }
+  }
   return true;
 }
 
@@ -209,6 +222,9 @@ export type Card = {
   annual_fee: number;
   rating: number;
   apply_url: string;
+  customer_care: string;
+  fraud_number: string;
+  bank_website: string;
 };
 
 export type CardBenefit = {

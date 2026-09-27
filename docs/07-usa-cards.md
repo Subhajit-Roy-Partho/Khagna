@@ -1,9 +1,10 @@
 # 07 — USA credit-card catalog
 
-Researched **2026-09-27** from issuer pages + Forbes Advisor / CNBC Select /
-Bankrate / CNN Underscored / Money.com grocery-card roundups.
+Researched **2026-09-27** from issuer pages (Amex, Capital One, Chase, Citi,
+Wells Fargo, U.S. Bank, Discover, Venmo, PayPal) + Forbes Advisor / CNBC
+Select / Bankrate / CNN Underscored / Money.com / NerdWallet roundups.
 
-## Coverage (19 cards, ~50 benefits)
+## Coverage (44 cards, 133 benefits)
 
 | Card | Bank | Fee | Grocery earn |
 |---|---|---|---|
@@ -26,10 +27,34 @@ Bankrate / CNN Underscored / Money.com grocery-card roundups.
 | Circle Card | Target | $0 | 5% off Target |
 | Sam's Club Mastercard | Synchrony | $0 + membership | 5% gas ($6k), 3% dining, 1% club |
 | Family Rewards Mastercard | U.S. Bank (Kroger family) | $0 | up to 5% at Kroger/Fry's/King Soopers/Ralphs… |
+| Venture X / Venture / VentureOne | Capital One | $395 / $95 / $0 | 2x–10x miles, portal bonuses |
+| Sapphire Reserve | Chase | $795 | 8x portal, 4x flights/hotels direct, 3x dining + $300 travel credit |
+| Platinum Card | Amex | $895 | 5x flights + prepaid hotels |
+| Hilton Surpass / Hilton Honors | Amex | $150 / $0 | 6x / 5x groceries + dining + gas |
+| Delta Gold / Blue | Amex | $150 ($0 yr 1) / $0 | 2x supermarkets + dining |
+| Bonvoy Boundless / Explorer | Chase | $95 | 3x / 2x grocery, dining, travel |
+| Autograph / Journey / One Key | Wells Fargo | $0 / $95 / $0 | 3x dining-travel-gas / 5x hotels / 3x grocery |
+| Altitude Go | U.S. Bank | $0 | 4x dining, 2x grocery/gas/streaming |
+| EveryDay | Amex | $0 | 2x supermarkets + 20% bonus months |
+| it Miles / it Chrome | Discover | $0 | 1.5x matched yr 1 / 2% gas + dining |
+| Venmo Visa / PayPal MC | Synchrony | $0 | 3%/2%/1% auto / 3% PayPal + 1.5% |
+| MileUp / AT&T Points Plus | Citi | $0 | 2x grocery incl. delivery |
+| Travel Rewards | BofA | $0 | 1.5x everything |
+| Fidelity Rewards Visa | Elan | $0 | 2% into Fidelity |
+| Quicksilver | Capital One | $0 | 1.5% everything |
 
 Key gotcha encoded in the data: Amex-style "supermarkets" rates **exclude**
 Walmart, Target and warehouse clubs — `merchant_place: "supermarkets"` vs
 `"grocery"`/`"wholesale"` keeps the /cards matcher honest.
+
+## Issuer contact fields
+
+`cards` has `customer_care`, `fraud_number`, `bank_website` (migrated
+additively — old DBs pick them up on boot). Seed data fills `bank_website`
+for major issuers; **phone numbers are intentionally blank** — they change and
+a wrong number is worse than none. Users add them per-card from the card
+dashboard (card detail page → Edit card details), which also supports card
+image upload (Cloudinary) and PATCH updates via `PATCH /api/cards`.
 
 ## Seeding
 
