@@ -58,6 +58,10 @@ image upload (Cloudinary) and PATCH updates via `PATCH /api/cards`.
 
 ## Seeding
 
+Easiest: sign in, open `/dashboard`, press **💳 Seed USA cards** (runs the
+upsert on the server, which already has the DB keys). Or from a machine with
+the Turso keys in env:
+
 ```bash
 npm run seed:usa-cards -- --dry-run   # preview, writes nothing
 npm run seed:usa-cards                # upsert into Turso (needs tursoURL/tursoAPIkey)
