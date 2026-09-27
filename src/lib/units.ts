@@ -1,9 +1,36 @@
-// Weight units normalized to price-per-kg for fair comparison.
+// SI (metric) is the default everywhere: kg/g rank first, lb/oz are opt-in.
 // piece stays as price-per-piece (not comparable to weight, sorted separately).
 
 export const WEIGHT_UNITS = ["kg", "g", "lb", "oz"] as const;
+export const SI_WEIGHT_UNITS = ["kg", "g"] as const;
+export const US_WEIGHT_UNITS = ["lb", "oz"] as const;
 export const ALL_UNITS = ["kg", "g", "lb", "oz", "piece"] as const;
 export type Unit = (typeof ALL_UNITS)[number];
+
+/** Default display / entry unit — SI metric. */
+export const DEFAULT_DISPLAY_UNIT: Unit = "kg";
+
+export const UNIT_LABELS: Record<string, string> = {
+  kg: "kg (SI)",
+  g: "g (SI)",
+  lb: "lb (US)",
+  oz: "oz (US)",
+  piece: "piece",
+};
+
+/** Grouped for <optgroup> rendering: SI first, US second, count last. */
+export const UNIT_GROUPS: { label: string; units: readonly string[] }[] = [
+  { label: "Metric (SI)", units: SI_WEIGHT_UNITS },
+  { label: "US customary", units: US_WEIGHT_UNITS },
+  { label: "Count", units: ["piece"] as const },
+];
+
+export function unitSystem(u: string): "si" | "us" | "count" | "unknown" {
+  if ((SI_WEIGHT_UNITS as readonly string[]).includes(u)) return "si";
+  if ((US_WEIGHT_UNITS as readonly string[]).includes(u)) return "us";
+  if (u === "piece") return "count";
+  return "unknown";
+}
 
 // grams per unit
 const TO_GRAMS: Record<string, number> = {

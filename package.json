@@ -8,7 +8,8 @@
     "start": "next start",
     "lint": "eslint",
     "scrape": "npx tsx scripts/scraper.ts",
-    "crawl:tempe": "npx tsx scripts/crawl-tempe.ts"
+    "crawl:tempe": "npx tsx scripts/crawl-tempe.ts",
+    "seed:usa-cards": "npx tsx scripts/seed-usa-cards.ts"
   },
   "dependencies": {
     "@libsql/client": "^0.18.0",

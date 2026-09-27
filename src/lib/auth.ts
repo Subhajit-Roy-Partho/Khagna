@@ -11,14 +11,25 @@ export const authOptions: NextAuthOptions = {
   //  Google:  console.cloud.google.com → AUTH_GOOGLE_ID / AUTH_GOOGLE_SECRET
   // Username+password accounts live in the users table (bcrypt-hashed).
   providers: [
-    GithubProvider({
-      clientId: process.env.AUTH_GITHUB_ID || "",
-      clientSecret: process.env.AUTH_GITHUB_SECRET || "",
-    }),
-    GoogleProvider({
-      clientId: process.env.AUTH_GOOGLE_ID || "",
-      clientSecret: process.env.AUTH_GOOGLE_SECRET || "",
-    }),
+    // Only register OAuth providers that are actually configured. Registering
+    // Github/Google with empty clientId/Secret makes every signIn("github")
+    // redirect to /api/auth/error?error=Configuration, which is what users saw.
+    ...((process.env.AUTH_GITHUB_ID && process.env.AUTH_GITHUB_SECRET)
+      ? [
+          GithubProvider({
+            clientId: process.env.AUTH_GITHUB_ID,
+            clientSecret: process.env.AUTH_GITHUB_SECRET,
+          }),
+        ]
+      : []),
+    ...((process.env.AUTH_GOOGLE_ID && process.env.AUTH_GOOGLE_SECRET)
+      ? [
+          GoogleProvider({
+            clientId: process.env.AUTH_GOOGLE_ID,
+            clientSecret: process.env.AUTH_GOOGLE_SECRET,
+          }),
+        ]
+      : []),
     CredentialsProvider({
       name: "Email + password",
       credentials: {
@@ -43,7 +54,10 @@ export const authOptions: NextAuthOptions = {
     }),
   ],
   session: { strategy: "jwt" },
-  pages: { signIn: "/signin" },
+  // NEXTAUTH_SECRET must be set on Vercel (production) — without it JWT
+  // signing fails and even email sign-up lands on /api/auth/error.
+  secret: process.env.NEXTAUTH_SECRET,
+  pages: { signIn: "/signin", error: "/signin" },
   callbacks: {
     async session({ session, token }) {
       if (session.user && token.sub) {

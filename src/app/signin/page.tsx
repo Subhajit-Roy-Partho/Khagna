@@ -1,8 +1,17 @@
 "use client";
-import { useState } from "react";
-import { signIn } from "next-auth/react";
+import { useEffect, useState } from "react";
+import { getProviders, signIn } from "next-auth/react";
 import { motion } from "framer-motion";
 import { useRouter } from "next/navigation";
+
+const AUTH_ERROR_HELP: Record<string, string> = {
+  Configuration:
+    "Auth is misconfigured on the server (usually a missing NEXTAUTH_SECRET or OAuth keys). Email sign-up still works once the secret is set — tell the admin to check Vercel env vars.",
+  OAuthSignin: "Could not start the OAuth flow. The provider may not be configured.",
+  OAuthCallback: "OAuth callback failed — check the provider's redirect URI.",
+  AccessDenied: "Access denied by the provider.",
+  Verification: "Verification failed. Try again.",
+};
 
 export default function SignInPage() {
   const router = useRouter();
@@ -10,8 +19,36 @@ export default function SignInPage() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [msg, setMsg] = useState("");
+  // Surface NextAuth errors (we set pages.error = "/signin", so
+  // /api/auth/error redirects land here with ?error=...). Lazy initializer —
+  // not an effect — to satisfy react-hooks/set-state-in-effect.
+  const [msg, setMsg] = useState(() => {
+    try {
+      if (typeof window === "undefined") return "";
+      const err = new URLSearchParams(window.location.search).get("error");
+      return err ? (AUTH_ERROR_HELP[err] ?? `Sign-in error: ${err}`) : "";
+    } catch {
+      return "";
+    }
+  });
   const [busy, setBusy] = useState(false);
+  const [oauth, setOauth] = useState<{ github: boolean; google: boolean } | null>(null);
+
+  useEffect(() => {
+    // Only show OAuth buttons for providers the server actually configured.
+    // (Unconfigured ones used to redirect to /api/auth/error?error=Configuration.)
+    (async () => {
+      try {
+        const p = await getProviders();
+        setOauth({
+          github: Boolean(p?.github),
+          google: Boolean(p?.google),
+        });
+      } catch {
+        setOauth({ github: false, google: false });
+      }
+    })();
+  }, []);
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
@@ -43,14 +80,26 @@ export default function SignInPage() {
       <h1 className="text-xl font-extrabold">Sign in to Khagna</h1>
       <p className="mt-1 text-sm text-gray-500">Only signed-in users can correct prices, comment, or add stores & cards.</p>
 
-      <div className="mt-4 grid gap-2">
-        <button onClick={() => signIn("github", { callbackUrl: "/" })} className="rounded-full bg-zinc-900 px-4 py-2.5 text-sm font-bold text-white hover:bg-black">
-          Continue with GitHub
-        </button>
-        <button onClick={() => signIn("google", { callbackUrl: "/" })} className="rounded-full border px-4 py-2.5 text-sm font-bold hover:bg-zinc-50">
-          Continue with Google
-        </button>
-      </div>
+      {oauth === null ? (
+        <div className="mt-4 rounded border p-3 text-center text-xs text-gray-400">Checking sign-in options…</div>
+      ) : oauth.github || oauth.google ? (
+        <div className="mt-4 grid gap-2">
+          {oauth.github && (
+            <button onClick={() => signIn("github", { callbackUrl: "/" })} className="rounded-full bg-zinc-900 px-4 py-2.5 text-sm font-bold text-white hover:bg-black">
+              Continue with GitHub
+            </button>
+          )}
+          {oauth.google && (
+            <button onClick={() => signIn("google", { callbackUrl: "/" })} className="rounded-full border px-4 py-2.5 text-sm font-bold hover:bg-zinc-50">
+              Continue with Google
+            </button>
+          )}
+        </div>
+      ) : (
+        <p className="mt-4 rounded-2xl border border-amber-200 bg-amber-50 p-3 text-xs text-amber-800">
+          Social sign-in isn&apos;t configured on this deployment — use email below.
+        </p>
+      )}
 
       <div className="my-4 flex items-center gap-2 text-xs text-gray-400">
         <span className="h-px flex-1 bg-zinc-200" /> or with email <span className="h-px flex-1 bg-zinc-200" />
